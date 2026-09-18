@@ -3,6 +3,11 @@ from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+try:
+ from fpdf import FPDF
+ PDF_READY=True
+except ImportError:
+ PDF_READY=False
 
 TITLE="Query Knowledge Graphs using Cypher"
 NODES=[("Aarush","Person"),("Harshita","Person"),("Nidhish","Person"),("Karan","Person"),("Jass","Person"),("Yahya","Person"),("Cypher","Topic")]
@@ -31,10 +36,21 @@ def visual():
  f.update_layout(title="In-memory graph: 6 nodes, 8 relationships",height=450,xaxis=dict(visible=False),yaxis=dict(visible=False));return f
 def report(name,roll,trials,score,notes):
  return f"{TITLE}\n\nStudent: {name}\nRoll: {roll}\nDate: {datetime.now().date()}\n\nRecorded Trials\n"+("No trials recorded." if trials.empty else "\n".join(f"{x['Trial #']}. {x['Query']} - {x['Rows']} rows" for _,x in trials.iterrows()))+f"\n\nQuiz Score: {score}/{len(QUIZ)}\n\nObservations\n{notes}"
+def pdf_report(name,roll,trials,score,notes):
+ p=FPDF();p.set_auto_page_break(auto=True,margin=15);p.add_page()
+ p.set_font("Helvetica","B",16);p.cell(0,10,TITLE,new_x="LMARGIN",new_y="NEXT")
+ p.set_font("Helvetica","",10);p.cell(0,7,f"Student: {name or 'N/A'} | Roll: {roll or 'N/A'} | Date: {datetime.now().date()}",new_x="LMARGIN",new_y="NEXT")
+ for heading,body in [("Learning Objectives","- Retrieve nodes and properties.\n- Retrieve relationships.\n- Explore one-hop and multi-hop paths."),("Recorded Query Trials","No trials recorded." if trials.empty else "\n".join(f"{x['Trial #']}. {x['Query']} - {x['Rows']} rows" for _,x in trials.iterrows())),("Assessment and Observations",f"Quiz score: {score}/{len(QUIZ)}\n\n{notes}")]:
+  p.ln(4);p.set_font("Helvetica","B",12);p.cell(0,8,heading,new_x="LMARGIN",new_y="NEXT");p.set_font("Helvetica","",9);p.multi_cell(0,5,body)
+ return bytes(p.output())
 def theory():
  st.header("Theory");st.markdown("Knowledge graphs represent entities as nodes and facts as typed relationships. Cypher is a declarative query language: describe the desired pattern with MATCH, then select fields with RETURN. This lab uses a small graph featuring Aarush, Harshita, Nidhish, Karan, Jass, and Yahya, so Neo4j is not expected.")
- st.subheader("Objectives");[st.write("- "+x) for x in ["Retrieve nodes and properties.","Retrieve relationships.","Explore one-hop connections.","Discover multi-hop paths."]]
- st.subheader("Procedure");[st.write(f"{i}. {x}") for i,x in enumerate(["Inspect the graph.","Run each Cypher pattern.","Record at least three trials.","Take the quiz and export the report."],1)]
+ st.subheader("Objectives")
+ for item in ["Retrieve nodes and properties.","Retrieve relationships.","Explore one-hop connections.","Discover multi-hop paths."]:
+  st.write("- "+item)
+ st.subheader("Procedure")
+ for index,item in enumerate(["Inspect the graph.","Run each Cypher pattern.","Record at least three trials.","Take the quiz and export the report."],1):
+  st.write(f"{index}. {item}")
 def simulation():
  st.header("Interactive Cypher Query Sandbox");st.info("Cypher queries are evaluated against the built-in graph; no database server is needed.");st.plotly_chart(visual(),use_container_width=True);q=st.selectbox("Choose a query",list(QUERIES));code,why,kind=QUERIES[q];st.caption(why);st.code(code,language="cypher")
  if st.button("Run Query",type="primary"):st.session_state.active=q
@@ -46,7 +62,12 @@ def quiz():
  with st.form("quiz"):ans=[st.radio(q,o,key=str(i)) for i,(q,o,a) in enumerate(QUIZ)];done=st.form_submit_button("Grade quiz",type="primary")
  if done:st.session_state.score=sum(x==o[a] for x,(_,o,a) in zip(ans,QUIZ));st.success(f"Score: {st.session_state.score}/{len(QUIZ)}")
 def reports():
- st.header("Report Generation");a,b=st.columns(2);name=a.text_input("Student Name");roll=b.text_input("Roll Number",value="46");notes=st.text_area("Observations","Cypher queries successfully retrieved nodes, relationships, and multi-hop graph connections.");trials=pd.DataFrame(st.session_state.trials);st.download_button("Download lab report",report(name,roll,trials,st.session_state.score,notes),"cypher_knowledge_graph_report.txt","text/plain",type="primary")
+ st.header("Report Generation");a,b=st.columns(2);name=a.text_input("Student Name");roll=b.text_input("Roll Number",value="46");notes=st.text_area("Observations","Cypher queries successfully retrieved nodes, relationships, and multi-hop graph connections.");trials=pd.DataFrame(st.session_state.trials)
+ st.write(f"**Quiz score:** {st.session_state.score}/{len(QUIZ)}")
+ if PDF_READY: st.download_button("Download lab report (PDF)",pdf_report(name,roll,trials,st.session_state.score,notes),"cypher_knowledge_graph_report.pdf","application/pdf",type="primary")
+ else:
+  st.warning("PDF export needs fpdf2. Run: pip install fpdf2")
+  st.download_button("Download text report meanwhile",report(name,roll,trials,st.session_state.score,notes),"cypher_knowledge_graph_report.txt","text/plain")
 def main():
  st.set_page_config(page_title=TITLE,layout="wide");st.title(TITLE)
  if "trials" not in st.session_state:st.session_state.trials=[]

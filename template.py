@@ -10,8 +10,8 @@ except ImportError:
  PDF_READY=False
 
 TITLE="Query Knowledge Graphs using Cypher"
-NODES=[("Aarush","Person"),("Harshita","Person"),("Nidhish","Person"),("Karan","Person"),("Jass","Person"),("Yahya","Person"),("Cypher","Topic")]
-EDGES=[("Aarush","KNOWS","Harshita"),("Aarush","COLLABORATES_WITH","Nidhish"),("Harshita","KNOWS","Karan"),("Nidhish","KNOWS","Jass"),("Karan","LEARNS","Cypher"),("Jass","USES","Cypher"),("Yahya","MENTORS","Aarush"),("Yahya","KNOWS","Jass")]
+NODES=[("Aarush","Person"),("Harshita","Person"),("Nidhish","Person"),("goat","Person"),("Jass","Person"),("Yahya","Person"),("Cypher","Topic")]
+EDGES=[("Aarush","KNOWS","Harshita"),("Aarush","COLLABORATES_WITH","Nidhish"),("Harshita","KNOWS","goat"),("Nidhish","KNOWS","Jass"),("goat","LEARNS","Cypher"),("Jass","USES","Cypher"),("Yahya","MENTORS","Aarush"),("Yahya","KNOWS","Jass")]
 QUERIES={"All nodes":("MATCH (n) RETURN n.name, labels(n);","Retrieve all entities.","nodes"),"All relationships":("MATCH (a)-[r]->(b) RETURN a.name, type(r), b.name;","Retrieve directed graph relationships.","edges"),"Aarush's connections":("MATCH (a:Person {name: 'Aarush'})-[r]->(b) RETURN type(r), b.name;","One-hop retrieval.","aarush"),"Two-hop paths":("MATCH (a:Person {name: 'Aarush'})-[r1]->(m)-[r2]->(end) RETURN a,m,end;","Retrieve indirect connections.","twohop"),"Paths to Cypher":("MATCH p=(start)-[*1..3]->(t:Topic {name:'Cypher'}) RETURN start,t,length(p);","Variable-length multi-hop traversal.","paths")}
 QUIZ=[("Which clause specifies a graph pattern?",["MATCH","RETURN","WHERE"],0),("What is (p:Person)?",["A Person node variable","A relationship","A property"],0),("What does type(r) return?",["Relationship type","Node label","Path length"],0),("Why use multi-hop queries?",["Find indirect connections","Delete nodes","Create labels"],0),("What does [*1..3] mean?",["One to three hops","Three nodes","All labels"],0)]
 def run(kind):
@@ -28,7 +28,7 @@ def run(kind):
  for n,l in NODES:visit(n,[n])
  return pd.DataFrame(out,columns=["Start","Destination","Hops","Path"]).drop_duplicates()
 def visual():
- pos={"Aarush":(0,2),"Harshita":(2,3),"Nidhish":(2,1),"Karan":(4,3),"Jass":(4,1),"Yahya":(-1,0),"Cypher":(6,2)};f=go.Figure()
+ pos={"Aarush":(0,2),"Harshita":(2,3),"Nidhish":(2,1),"goat":(4,3),"Jass":(4,1),"Yahya":(-1,0),"Cypher":(6,2)};f=go.Figure()
  for a,r,b in EDGES:
   x,y=pos[a];u,v=pos[b];f.add_trace(go.Scatter(x=[x,u],y=[y,v],mode="lines",line=dict(color="#94a3b8"),showlegend=False));f.add_annotation(x=(x+u)/2,y=(y+v)/2,text=r,showarrow=False,font=dict(size=9))
  for n,l in NODES:
@@ -44,7 +44,7 @@ def pdf_report(name,roll,trials,score,notes):
   p.ln(4);p.set_font("Helvetica","B",12);p.cell(0,8,heading,new_x="LMARGIN",new_y="NEXT");p.set_font("Helvetica","",9);p.multi_cell(0,5,body)
  return bytes(p.output())
 def theory():
- st.header("Theory");st.markdown("Knowledge graphs represent entities as nodes and facts as typed relationships. Cypher is a declarative query language: describe the desired pattern with MATCH, then select fields with RETURN. This lab uses a small graph featuring Aarush, Harshita, Nidhish, Karan, Jass, and Yahya, so Neo4j is not expected.")
+ st.header("Theory");st.markdown("Knowledge graphs represent entities as nodes and facts as typed relationships. Cypher is a declarative query language: describe the desired pattern with MATCH, then select fields with RETURN. This lab uses a small graph featuring Aarush, Harshita, Nidhish, goat, Jass, and Yahya, so Neo4j is not expected.")
  st.subheader("Objectives")
  for item in ["Retrieve nodes and properties.","Retrieve relationships.","Explore one-hop connections.","Discover multi-hop paths."]:
   st.write("- "+item)

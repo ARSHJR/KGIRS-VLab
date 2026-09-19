@@ -1,6 +1,6 @@
-# Query Knowledge Graphs using Cypher
+# Query Knowledge Graphs using Graph Query Patterns
 
-A Streamlit virtual-lab application for exploring a small knowledge graph through guided Cypher query patterns. The application demonstrates retrieval of nodes, relationships, direct connections, and multi-hop paths without requiring Neo4j.
+A Streamlit virtual-lab application for exploring a small knowledge graph through guided graph query patterns. The application demonstrates retrieval of nodes, relationships, direct connections, and multi-hop paths using an in-memory graph.
 
 ## Team
 
@@ -35,7 +35,7 @@ Streamlit will open the virtual lab in your browser.
 
 ## Features
 
-- Theory of knowledge graphs and Cypher
+- Theory of knowledge graphs and graph query patterns
 - Interactive graph visualization
 - Guided node, relationship, and multi-hop query experiments
 - Trial recording
